@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local config and secrets
+.env
+.env.*
+
+# App/runtime artifacts
+.streamlit/
+data/notes.json
+.agents/
+
+# Misc
+.DS_Store
+Thumbs.db
