@@ -16,8 +16,9 @@ import time
 
 from app import llm, memory, summarizer, tools
 from app.config import settings
+from app.datetime_utils import enrich_query
 from app.models import AgentState, AgentStep, PageContent, ResearchResponse, SearchResult, ToolCall, ToolName
-from app.prompts import AGENT_SYSTEM_PROMPT
+from app.prompts import build_system_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,11 @@ def _redirect_redundant_read(state: AgentState, call: ToolCall) -> ToolCall:
 
 
 async def run(query: str) -> ResearchResponse:
-    state = AgentState(query=query, original_query=query, max_steps=settings.max_steps)
+    enriched_query, was_enriched = enrich_query(query)
+    if was_enriched:
+        logger.info("enriched query with date context: %r -> %r", query, enriched_query)
+    state = AgentState(query=enriched_query, original_query=query, max_steps=settings.max_steps)
+    system_prompt = build_system_prompt()
     run_started_at = time.perf_counter()
 
     while state.step < state.max_steps:
@@ -67,11 +72,11 @@ async def run(query: str) -> ResearchResponse:
         decision_started_at = time.perf_counter()
 
         try:
-            call = llm.decide_next_action(AGENT_SYSTEM_PROMPT, scratchpad)
+            call = llm.decide_next_action(system_prompt, scratchpad)
         except ValueError as e:
             logger.warning("bad tool call on step %d: %s — retrying once", state.step, e)
             try:
-                call = llm.decide_next_action(AGENT_SYSTEM_PROMPT, scratchpad)
+                call = llm.decide_next_action(system_prompt, scratchpad)
             except ValueError as e2:
                 logger.error("second bad tool call on step %d: %s — force-finishing", state.step, e2)
                 break  # fall through to force-finish path below

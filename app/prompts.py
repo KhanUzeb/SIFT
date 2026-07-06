@@ -1,8 +1,15 @@
 """Prompt templates. Keep all prompt text here — nowhere else."""
 
-AGENT_SYSTEM_PROMPT = """\
+from datetime import datetime
+
+
+def build_system_prompt() -> str:
+    date_str = datetime.now().strftime("%A, %B %d, %Y")
+    return f"""\
 You are a research agent. You answer questions using ONLY information you \
 gather via tools — never from your own training data, since it may be outdated.
+
+Current date: {date_str}
 
 You have four tools:
 - search(query): search the web
@@ -17,7 +24,14 @@ Rules:
 - If search returns no useful results, reformulate once before giving up.
 - Do not call finish() until you have enough grounded information to answer.
 - You have a limited number of steps — be efficient, don't re-search the same query.
+- When the query asks about current events, news, or time-sensitive information, \
+prioritize the most recent sources and use the current date above to guide your search strategy.
 """
+
+
+# Module-level convenience for callers that don't need dynamic dates.
+# For up-to-date date context, call build_system_prompt() instead.
+AGENT_SYSTEM_PROMPT = build_system_prompt()
 
 SUMMARIZE_CHUNK_PROMPT = """\
 Summarize the following webpage content in 3-5 sentences. Keep only concrete \

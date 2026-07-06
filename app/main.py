@@ -16,7 +16,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.WARNING)
 
-app = FastAPI(title="AI Research Agent", version="0.1.0")
+app = FastAPI(title="SIFT", version="0.1.0")
 
 
 @app.post("/research", response_model=ResearchResponse)
