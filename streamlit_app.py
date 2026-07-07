@@ -72,11 +72,40 @@ def check_backend() -> bool:
         return False
 
 
+@st.cache_data
+def _bg_image_data() -> str:
+    path = APP_DIR / "Bg.jpg"
+    if not path.exists():
+        return ""
+    with open(path, "rb") as f:
+        data = base64.b64encode(f.read()).decode()
+    return f"data:image/jpeg;base64,{data}"
+
+
 def inject_styles() -> None:
-    st.markdown(
+    bg_data = _bg_image_data()
+    bg_css = (
+        f"""
+          .stApp::before {{
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: url({bg_data});
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.12;
+            z-index: -1;
+            pointer-events: none;
+          }}
         """
+        if bg_data
+        else ""
+    )
+    st.markdown(
+        f"""
         <style>
-          :root {
+          :root {{
             --bg: #fafafa;
             --card: #ffffff;
             --text: #111111;
@@ -85,13 +114,21 @@ def inject_styles() -> None:
             --accent: #ff365c;
             --accent-soft: rgba(255, 54, 92, 0.08);
             --radius: 14px;
-          }
+          }}
 
-          .stApp {
-            background: var(--bg);
+          .stApp {{
+            background: {"transparent" if bg_data else "var(--bg)"};
             color: var(--text);
-          }
+          }}
 
+          {bg_css}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
+        <style>
           [data-testid="stAppViewContainer"],
           [data-testid="stHeader"],
           [data-testid="stToolbar"] {
