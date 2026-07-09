@@ -24,38 +24,9 @@ A user submits a question that requires current, verifiable information. SIFT se
 
 ## High-Level Architecture
 
-```
-User Query
-    |
-    v
-FastAPI Endpoint (app/main.py)
-    |
-    v
-Agent Loop Manager (app/agent.py) <------------------+
-    |  decides next action                            |
-    v                                                  |
-LLM Client (app/llm.py)                                |
-    |--> Native tool call                              |
-    |--> Structured JSON fallback                      |
-    |--> Heuristic rule-based fallback                 |
-    v  executes tool                                   |
-Tool Router (app/tools.py) ----------------------------+
-    |  updates history and scratchpad
-    |
-    |--> search --> Tavily Search API
-    |--> read   --> HTTPX async crawler + BeautifulSoup4 parser
-    |
-    v  loop exits on finish() or max_steps
-Summarization Stage (app/summarizer.py)
-    - concurrent per-page chunking and summarization
-    - multi-document merge into final answer
-    |
-    v
-Memory Layer (app/memory.py) --> data/notes.json
-    |
-    v
-ResearchResponse (answer, sources, step count, note id)
-```
+![SIFT Architecture](mermaid.jpeg)
+
+SIFT's architecture is shown as a Mermaid design diagram — a flowchart that traces the user query through FastAPI, the agent loop with LLM fallback chain, tool routing (search/read), summarization, memory persistence, and final response. This keeps the architecture visual and concise, replacing the earlier line-diagram representation.
 
 The design principle throughout: the agent decides *what to gather*, while summarization, citation tracking, and persistence remain deterministic steps that always run the same way once the loop exits. This keeps the unpredictable part of the system (LLM reasoning) isolated from the parts that need to be reliable (data handling, storage, response formatting).
 
